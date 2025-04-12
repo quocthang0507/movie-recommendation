@@ -1,15 +1,14 @@
 const neo4j = require('neo4j-driver');
+
 const driver = neo4j.driver(
-  'bolt://localhost:7689', // Thay bằng URI của bạn
-  neo4j.auth.basic('neo4j', 'neo4jdesktop'),
+  'neo4j+s://252a0996.databases.neo4j.io', // Neo4j Aura URI
+  neo4j.auth.basic('neo4j', 'VzNxmbtYVfg2LzSjvZMM5nDiH9e_0APaeivSEGE6P8U'), // Replace with your Aura credentials
   {
     logging: {
-      level: 'debug', // can be 'error', 'warn', 'info', or 'debug'
+      level: 'debug', // Can be 'error', 'warn', 'info', or 'debug'
       logger: (level, message) => console.log(`${level}: ${message}`)
     }
   }
-  
-  
 );
 
 module.exports = driver;
