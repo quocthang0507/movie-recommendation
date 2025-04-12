@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 // Sử dụng URL kết nối từ MongoDB Atlas
-const dbURL = 'mongodb+srv://nguyenthilananhit:Nguyenthilananh!2345@cluster0.abcdef.mongodb.net/suggestfilm?retryWrites=true&w=majority';
+const dbURL = 'mongodb://atlas-sql-67fa2d4703d57a001b56f0c6-nrd4f.a.query.mongodb.net/sample_mflix?ssl=true&authSource=admin';
 
 // Tạo schema cho reviews (nếu chưa có)
 const reviewSchema = new mongoose.Schema({
