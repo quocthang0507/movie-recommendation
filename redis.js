@@ -1,44 +1,18 @@
-
-// const redis = require('redis');
-// const { promisify } = require('util');
-
-// const client = redis.createClient({
-//   host: 'localhost', 
-//   port: 6379,
-// });
-
-// client.on('error', (err) => {
-//   console.error('Redis error:', err);
-// });
-
-// // Chuyển các hàm callback thành Promise
-// const getAsync = promisify(client.get).bind(client);
-// const setAsync = promisify(client.set).bind(client);
-// const delAsync = promisify(client.del).bind(client);
-
-// module.exports = {
-//   client,
-//   getAsync,
-//   setAsync,
-//   delAsync,
-// };
-// redis.js
-// redis.js
-// redis.js (phiên bản mới)
-// redis.js
 const { createClient } = require('redis');
 
 async function connectRedis() {
   const client = createClient({
-    url: 'redis://localhost:6379',
+    url: process.env.REDIS_URL,
     socket: {
+      tls: true, // Enable TLS for secure connection
+      rejectUnauthorized: false, // Optional: Disable strict SSL verification (use with caution)
       reconnectStrategy: (retries) => {
         if (retries > 10) {
           console.error('Max retries reached, Redis unavailable');
           return new Error('Max retries reached');
         }
         console.log(`Retrying to connect to Redis (${retries + 1}/10)...`);
-        return Math.min(retries * 100, 2000); // Delay tối đa 2 giây
+        return Math.min(retries * 100, 2000); // Delay up to 2 seconds
       }
     }
   });
@@ -49,7 +23,7 @@ async function connectRedis() {
   client.on('error', (err) => console.error('Redis error:', err));
 
   try {
-    console.log('Trying to connect to Redis at redis://localhost:6379');
+    console.log('Trying to connect to Redis at Upstash');
     await client.connect();
     console.log('Connected to Redis successfully');
     return client;
@@ -58,9 +32,5 @@ async function connectRedis() {
     throw err;
   }
 }
-
-module.exports = connectRedis;
-
-
 
 module.exports = connectRedis;
