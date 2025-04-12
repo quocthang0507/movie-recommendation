@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Movie App</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+    select, button { padding: 8px; margin: 5px 0; width: 100%; }
+    #movieDetails, #userMovies, #reviewsSection { margin-top: 20px; padding: 15px; border: 1px solid #ddd; }
+    .stat { font-weight: bold; color: #2c3e50; }
+    
+    #analyticsPanel {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      float: right;
+      width: 45%;
+      margin-left: 5%;
+    }
+    #reviewForm {
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  display: none; /* Ẩn mặc định */
+}
+    #analyticsPanel h2, #analyticsPanel h3 {
+      color: #2c3e50;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    
+    #analyticsPanel ul {
+      padding-left: 20px;
+    }
+    
+    #analyticsPanel li {
+      margin: 5px 0;
+      padding: 3px 0;
+    }
+    
+    #recommendations {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e8f4f8;
+      border-radius: 8px;
+    }
+    
+    #recommendations h3 {
+      color: #2c3e50;
+      margin-top: 0;
+    }
+    
+    #recommendationsList, #reviewsList, #popularMoviesList {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    
+    #recommendationsList li, #reviewsList li, #popularMoviesList li {
+      padding: 8px;
+      margin: 5px 0;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .popularity-score {
+      float: right;
+      font-weight: bold;
+      color: #e67e22;
+    }
+    
+    .container {
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .main-content {
+      width: 50%;
+    }
+    
+    .stats-section {
+      margin-bottom: 25px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Movie Analytics</h1>
+  <div class="container">
+    <div class="main-content">
+      <!-- Dropdown chọn phim -->
+      <label for="movieSelect">Chọn phim:</label>
+      <select id="movieSelect" onchange="loadMovieStats(this.value)">
+        <option value="">-- Chọn phim --</option>
+      </select>
+      
+      <!-- Hiển thị thông tin phim -->
+      <div id="movieDetails">
+        <h2>Thông tin:</h2>
+        <p class="stat" id="viewCount"></p>
+        <!-- Hiển thị review của phim -->
+      <div id="reviewsSection">
+        <h3>Reviews:</h3>
+        <ul id="reviewsList"></ul>
+      </div>
+
+        <!-- Dropdown chọn người dùng -->
+        <label for="userSelect">Người dùng đã xem:</label>
+        <select id="userSelect" onchange="loadUserMovies(this.value)">
+          <option value="">-- Chọn người dùng --</option>
+        </select>
+      </div>
+      <div id="reviewForm" style="margin-top: 20px; padding: 15px; border: 1px solid #ddd;">
+  <h3>Viết đánh giá của bạn</h3>
+  <form id="addReviewForm">
+    <input type="hidden" id="reviewUserId">
+    <input type="hidden" id="reviewMovieId">
+    <div style="margin-bottom: 10px;">
+      <label for="reviewRating">Đánh giá (1-5 sao):</label>
+      <select id="reviewRating" required style="width: 100%; padding: 8px;">
+        <option value="">-- Chọn số sao --</option>
+        <option value="1">1 sao</option>
+        <option value="2">2 sao</option>
+        <option value="3">3 sao</option>
+        <option value="4">4 sao</option>
+        <option value="5">5 sao</option>
+      </select>
+    </div>
+    <div style="margin-bottom: 10px;">
+      <label for="reviewText">Nội dung đánh giá:</label>
+      <textarea id="reviewText" rows="4" style="width: 100%; padding: 8px;" required></textarea>
+    </div>
+    <button type="submit" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
+      Gửi đánh giá
+    </button>
+  </form>
+</div>
+      <!-- Hiển thị phim của người dùng -->
+      <div id="userMovies"></div>
+      
+      
+      
+      <!-- Gợi ý phim -->
+      <div id="recommendations">
+        <h3>Gợi ý phim cho bạn:</h3>
+        <ul id="recommendationsList"></ul>
+      </div>
+    </div>
+    
+    <!-- Panel thống kê -->
+    <div id="analyticsPanel">
+      <div id="searchSection" style="margin-bottom: 20px;">
+        <h2>Tìm kiếm phim</h2>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="searchInput" placeholder="Nhập tên phim, diễn viên hoặc đạo diễn..." style="flex: 1; padding: 8px;">
+          <button onclick="performSearch()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">Tìm kiếm</button>
+        </div>
+        
+        <!-- Kết quả tìm kiếm -->
+        <div id="searchResults" style="margin-top: 15px; display: none;">
+          <h3>Kết quả tìm kiếm:</h3>
+          <ul id="searchResultsList" style="list-style-type: none; padding-left: 0;"></ul>
+        </div>
+        
+        <!-- Lịch sử tìm kiếm -->
+        <div id="searchHistory" style="margin-top: 20px; display: none;">
+          <h3>Lịch sử tìm kiếm gần đây:</h3>
+          <ul id="searchHistoryList" style="list-style-type: none; padding-left: 0;"></ul>
+        </div>
+      </div>
+      
+      <h2>Thống kê</h2>
+      <!--  Phim phổ biến -->
+      <div class="stats-section">
+        <h3>Phim phổ biến nhất</h3>
+        <div id="popularMovies">
+          <p><em>Dựa trên điểm đánh giá từ cộng đồng</em></p>
+          <ul id="popularMoviesList"></ul>
+        </div>
+      <div class="stats-section">
+        <h3>Top người dùng</h3>
+        <div id="topUsers">
+          <p><strong>Xem nhiều nhất:</strong></p>
+          <ul id="topUsersList"></ul>
+          <p><strong>Xem ít nhất:</strong></p>
+          <ul id="bottomUsersList"></ul>
+        </div>
+      </div>
+      
+      <div class="stats-section">
+        <h3>Top bộ phim</h3>
+        <div id="topMovies">
+          <p><strong>Được xem nhiều nhất:</strong></p>
+          <ul id="topMoviesList"></ul>
+          <p><strong>Được xem ít nhất:</strong></p>
+          <ul id="bottomMoviesList"></ul>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load danh sách phim khi trang được tải
+    document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    // Ẩn form đánh giá khi tải trang
+    document.getElementById('reviewForm').style.display = 'none';
+
+    // Load danh sách phim
+    const response = await fetch('/api/movies');
+    const movies = await response.json();
+
+    const select = document.getElementById('movieSelect');
+    movies.forEach(movie => {
+      const option = document.createElement('option');
+      option.value = movie.movie_id;
+      option.textContent = movie.title;
+      select.appendChild(option);
+    });
+
+    // Load thống kê
+    await loadAnalytics();
+    // Load phim phổ biến
+    await loadPopularMovies();
+  } catch (error) {
+    console.error('Error loading movies:', error);
+  }
+});
+
+    // Load chi tiết phim
+    async function loadMovieDetails(movieId) {
+      if (!movieId) {
+        document.getElementById('movieDetails').innerHTML = '';
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/movies/${movieId}`);
+        const movie = await response.json();
+        
+        const detailsDiv = document.getElementById('movieDetails');
+        detailsDiv.innerHTML = `
+          <h2>${movie.title}</h2>
+          <p><strong>Ngày phát hành:</strong> ${new Date(movie.release_date).toLocaleDateString()}</p>
+        `;
+      } catch (error) {
+        console.error('Error loading movie details:', error);
+        document.getElementById('movieDetails').innerHTML = '<p>Error loading movie details</p>';
+      }
+    }
+
+  // Hàm thực hiện tìm kiếm
+  async function performSearch() {
+    const query = document.getElementById('searchInput').value.trim();
+    if (!query) return;
+
+    try {
+      const response = await fetch(`/api/movies/search?q=${encodeURIComponent(query)}`);
+      const results = await response.json();
+
+      const resultsList = document.getElementById('searchResultsList');
+      resultsList.innerHTML = '';
+
+      if (results.length === 0) {
+        resultsList.innerHTML = '<li>Không tìm thấy kết quả nào</li>';
+      } else {
+        results.forEach(movie => {
+          const item = document.createElement('li');
+          item.style.padding = '8px';
+          item.style.margin = '5px 0';
+          item.style.background = 'white';
+          item.style.borderRadius = '4px';
+          item.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+          item.innerHTML = `
+            <strong>${movie.title}</strong> (${new Date(movie.release_date).toLocaleDateString()})
+            <br><small>Đạo diễn: ${movie.director_name || 'Không rõ'}</small>
+            <br><small>Thể loại: ${movie.genre_name || 'Không rõ'}</small>
+          `;
+          item.onclick = () => {
+            document.getElementById('movieSelect').value = movie.movie_id;
+            loadMovieStats(movie.movie_id);
+          };
+          resultsList.appendChild(item);
+        });
+      }
+
+      document.getElementById('searchResults').style.display = 'block';
+      
+      // Lưu lịch sử tìm kiếm và cập nhật hiển thị
+      await saveSearchHistory(query);
+      await loadSearchHistory();
+    } catch (error) {
+      console.error('Lỗi khi tìm kiếm:', error);
+      document.getElementById('searchResultsList').innerHTML = '<li>Đã xảy ra lỗi khi tìm kiếm</li>';
+    }
+  }
+
+  // Lưu lịch sử tìm kiếm vào Redis
+  async function saveSearchHistory(query) {
+    try {
+      await fetch('/api/movies/search-history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query })
+      });
+    } catch (error) {
+      console.error('Lỗi khi lưu lịch sử tìm kiếm:', error);
+    }
+  }
+
+  // Tải lịch sử tìm kiếm từ Redis
+  async function loadSearchHistory() {
+    try {
+      const response = await fetch('/api/movies/search-history');
+      const history = await response.json();
+
+      const historyList = document.getElementById('searchHistoryList');
+      historyList.innerHTML = '';
+
+      if (history.length === 0) {
+        document.getElementById('searchHistory').style.display = 'none';
+      } else {
+        history.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.style.padding = '8px';
+          li.style.margin = '5px 0';
+          li.style.background = '#f8f9fa';
+          li.style.borderRadius = '4px';
+          li.style.cursor = 'pointer';
+          li.textContent = item;
+          li.onclick = () => {
+            document.getElementById('searchInput').value = item;
+            performSearch();
+          };
+          historyList.appendChild(li);
+        });
+        document.getElementById('searchHistory').style.display = 'block';
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải lịch sử tìm kiếm:', error);
+    }
+  }
+
+  // Tự động tải lịch sử tìm kiếm khi trang được tải
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadSearchHistory();
+    
+    // Thêm sự kiện nhấn Enter để tìm kiếm
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+  });
+// Cập nhật form khi chọn phim và người dùng
+async function updateReviewForm(movieId, userId) {
+  const reviewForm = document.getElementById('reviewForm');
+
+  if (!movieId || !userId) {
+    reviewForm.style.display = 'none';
+    return;
+  }
+
+  reviewForm.style.display = 'block';
+  document.getElementById('reviewMovieId').value = movieId;
+  document.getElementById('reviewUserId').value = userId;
+
+  // Reset form
+  document.getElementById('reviewRating').value = '';
+  document.getElementById('reviewText').value = '';
+}
+
+// Xử lý submit form
+document.getElementById('addReviewForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const movieId = document.getElementById('reviewMovieId').value;
+  const userId = document.getElementById('reviewUserId').value;
+  const rating = document.getElementById('reviewRating').value;
+  const reviewText = document.getElementById('reviewText').value;
+  
+  if (!movieId || !userId || !rating || !reviewText) {
+    alert('Vui lòng điền đầy đủ thông tin');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/movies/reviews', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        movie_id: parseInt(movieId),
+        user_id: parseInt(userId),
+        rating: parseInt(rating),
+        review_text: reviewText
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Lỗi khi gửi đánh giá');
+    }
+    
+    const result = await response.json();
+    alert('Đánh giá đã được gửi thành công!');
+    
+    // Làm mới danh sách reviews
+    loadMovieStats(movieId);
+    loadPopularMovies();
+    // // Tự động tải lại trang sau 1 giây
+    // setTimeout(() => {
+    //   window.location.reload();
+    // }, 1000);
+    // Reset form
+    document.getElementById('addReviewForm').reset();
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    alert('Đã xảy ra lỗi khi gửi đánh giá: ' + error.message);
+  }
+});
+
+async function loadMovieStats(movieId) {
+  const reviewForm = document.getElementById('reviewForm');
+  const userSelect = document.getElementById('userSelect');
+
+  if (!movieId) {
+    document.getElementById('reviewsList').innerHTML = '';
+    document.getElementById('movieDetails').innerHTML = '';
+    reviewForm.style.display = 'none';
+    return;
+  }
+
+  try {
+    // Load thống kê phim
+    const statsResponse = await fetch(`/api/movies/stats/${movieId}`);
+    if (!statsResponse.ok) {
+      throw new Error(`HTTP error! status: ${statsResponse.status}`);
+    }
+    const statsData = await statsResponse.json();
+
+    document.getElementById('viewCount').textContent = 
+      `Tổng lượt xem: ${statsData.total_views}`;
+
+    userSelect.innerHTML = '<option value="">-- Chọn người dùng --</option>';
+    statsData.users.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.user_id;
+      option.textContent = user.username;
+      userSelect.appendChild(option);
+    });
+
+    // Load reviews của phim
+    const reviewsResponse = await fetch(`/api/movies/${movieId}/reviews`);
+    if (!reviewsResponse.ok) {
+      throw new Error(`HTTP error! status: ${reviewsResponse.status}`);
+    }
+    const reviewsData = await reviewsResponse.json();
+
+    const reviewsList = document.getElementById('reviewsList');
+    reviewsList.innerHTML = '';
+
+    if (!reviewsData.reviews || reviewsData.reviews.length === 0) {
+      reviewsList.innerHTML = '<li>Chưa có review nào cho phim này</li>';
+    } else {
+      reviewsData.reviews.forEach(review => {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          <strong>${review.username || 'Ẩn danh'}</strong>: ${review.review_text} 
+          <br><small>Đánh giá: ${review.rating}/5 - ${new Date(review.created_at).toLocaleString()}</small>
+        `;
+        reviewsList.appendChild(item);
+      });
+
+      // Thêm hiển thị rating trung bình
+      const avgRatingElement = document.querySelector('.average-rating');
+      if (avgRatingElement) {
+        avgRatingElement.textContent = `Điểm trung bình: ${reviewsData.average_rating || 'Chưa có'}`;
+      } else {
+        const newAvgRatingElement = document.createElement('p');
+        newAvgRatingElement.className = 'average-rating';
+        newAvgRatingElement.textContent = `Điểm trung bình: ${reviewsData.average_rating || 'Chưa có'}`;
+        reviewsList.parentNode.insertBefore(newAvgRatingElement, reviewsList.nextSibling);
+      }
+    }
+
+    // Chỉ hiển thị form nếu có người dùng được chọn
+    updateReviewForm(movieId, userSelect.value);
+
+  } catch (error) {
+    console.error('Error loading movie stats or reviews:', error);
+    document.getElementById('reviewsList').innerHTML = '<li>Đã xảy ra lỗi khi tải reviews</li>';
+    reviewForm.style.display = 'none';
+  }
+}
+ 
+    // Load phim của người dùng và gợi ý
+    async function loadUserMovies(userId) {
+  const reviewForm = document.getElementById('reviewForm');
+  const movieSelect = document.getElementById('movieSelect');
+
+  if (!userId) {
+    reviewForm.style.display = 'none'; // Ẩn form nếu không có người dùng
+    document.getElementById('userMovies').innerHTML = ''; // Xóa danh sách phim
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/movies/user-movies/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const movies = await response.json();
+
+    const userMoviesDiv = document.getElementById('userMovies');
+    userMoviesDiv.innerHTML = '<h3>Phim đã xem:</h3>';
+
+    if (movies.length === 0) {
+      userMoviesDiv.innerHTML += '<p>Người dùng chưa xem phim nào</p>';
+    } else {
+      const list = document.createElement('ul');
+      movies.forEach(movie => {
+        const item = document.createElement('li');
+        item.textContent = `${movie.title} (${movie.view_count} lượt)`;
+        list.appendChild(item);
+      });
+      userMoviesDiv.appendChild(list);
+    }
+
+    // Hiển thị form đánh giá và cập nhật thông tin
+    reviewForm.style.display = 'block';
+    updateReviewForm(movieSelect.value, userId);
+
+    // Load gợi ý phim
+    await loadRecommendations(userId);
+  } catch (error) {
+    console.error('Error loading user movies:', error);
+    document.getElementById('userMovies').innerHTML = '<p>Đã xảy ra lỗi khi tải danh sách phim</p>';
+    reviewForm.style.display = 'none'; // Ẩn form nếu có lỗi
+  }
+}
+
+    // Load gợi ý phim từ Neo4j
+    async function loadRecommendations(userId) {
+      if (!userId) return;
+      
+      try {
+        const response = await fetch(`/api/movies/recommendations/${userId}`);
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+        const recommendations = await response.json();
+        
+        const recommendationsList = document.getElementById('recommendationsList');
+        recommendationsList.innerHTML = '';
+        
+        if (recommendations.length === 0) {
+          recommendationsList.innerHTML = '<li>Không có gợi ý nào</li>';
+        } else {
+          recommendations.forEach(movie => {
+            const item = document.createElement('li');
+            item.textContent = `${movie.title} (${new Date(movie.release_date).toLocaleDateString()})`;
+            recommendationsList.appendChild(item);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading recommendations:', error);
+        document.getElementById('recommendationsList').innerHTML = '<li>Đã xảy ra lỗi khi tải gợi ý phim</li>';
+      }
+    }
+
+    // Load thống kê
+    async function loadAnalytics() {
+      try {
+        const response = await fetch('/api/movies/analytics/top-stats');
+        const stats = await response.json();
+        
+        const topUsersList = document.getElementById('topUsersList');
+        const bottomUsersList = document.getElementById('bottomUsersList');
+        
+        topUsersList.innerHTML = stats.top_users.map(user => 
+          `<li>${user.username} (${user.movies_watched} phim)</li>`
+        ).join('');
+        
+        bottomUsersList.innerHTML = stats.bottom_users.map(user => 
+          `<li>${user.username} (${user.movies_watched} phim)</li>`
+        ).join('');
+        
+        const topMoviesList = document.getElementById('topMoviesList');
+        const bottomMoviesList = document.getElementById('bottomMoviesList');
+        
+        topMoviesList.innerHTML = stats.top_movies.map(movie => 
+          `<li>${movie.title} (${movie.viewers} lượt)</li>`
+        ).join('');
+        
+        bottomMoviesList.innerHTML = stats.bottom_movies.map(movie => 
+          `<li>${movie.title} (${movie.viewers} lượt)</li>`
+        ).join('');
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+      }
+    }
+    async function loadPopularMovies() {
+  try {
+    const response = await fetch('/api/movies/top-movies');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const popularMovies = await response.json();
+    
+    const popularMoviesList = document.getElementById('popularMoviesList');
+    popularMoviesList.innerHTML = '';
+    
+    if (!popularMovies || popularMovies.length === 0) {
+      popularMoviesList.innerHTML = '<li>Không có dữ liệu phim phổ biến</li>';
+    } else {
+      popularMovies.forEach(movie => {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          ${movie.title}
+          <span class="popularity-score">${movie.popularity ? movie.popularity.toFixed(1) : 'N/A'} sao</span>
+        `;
+        popularMoviesList.appendChild(item);
+      });
+    }
+  } catch (error) {
+    console.error('Error loading popular movies:', error);
+    document.getElementById('popularMoviesList').innerHTML = '<li>Đã xảy ra lỗi khi tải phim phổ biến</li>';
+  }
+}
+  </script>
+</body>
+</html>
