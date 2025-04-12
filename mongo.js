@@ -1,8 +1,7 @@
 // File: mongo.js
 const mongoose = require('mongoose');
 
-// Sử dụng URL kết nối từ MongoDB Atlas
-const dbURL = 'mongodb+srv://nguyenthilananhit:Nguyenthilananh!2345@cluster0.abcdef.mongodb.net/suggestfilm?retryWrites=true&w=majority';
+const dbURL = 'mongodb+srv://nguyenthilananhit:Nguyenthilananh!2345@cluster0.9gdnlpv.mongodb.net/'; // DB name phải khớp với tên bạn đã tạo
 
 // Tạo schema cho reviews (nếu chưa có)
 const reviewSchema = new mongoose.Schema({
