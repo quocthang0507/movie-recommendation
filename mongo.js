@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 // 👉 Dùng biến môi trường để giữ URI an toàn
-const dbURL = process.env.MONGODB_URI || 'mongodb://localhost:27017/movies_app';
+const dbURL = process.env.MONGO_URI || 'mongodb://localhost:27017/movies_app';
 
 const reviewSchema = new mongoose.Schema({
   movie_id: Number,
